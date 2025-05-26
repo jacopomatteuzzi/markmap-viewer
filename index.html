@@ -3,13 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Custom Markmap Viewer</title>
-
-
-
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com;">
-
-
-  
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com;">
   <style>
     html, body { height: 100%; margin: 0; }
     #mindmap { width: 100vw; height: 100vh; }
@@ -20,14 +14,19 @@
 <body>
   <svg id="mindmap"></svg>
   <script>
-    // Get markdown from query string (?md=...) or hash (#md=...)
+    // Funzione robusta per ottenere il markdown dalla query string o hash
     function getMarkdown() {
       const params = new URLSearchParams(window.location.search);
       let md = params.get('md');
       if (!md && window.location.hash.startsWith('#md=')) {
-        md = decodeURIComponent(window.location.hash.slice(4));
+        try {
+          md = decodeURIComponent(window.location.hash.slice(4));
+        } catch (e) {
+          md = '';
+        }
       }
-      return md ? decodeURIComponent(md) : '# Nessun contenuto';
+      // NON decodificare di nuovo se arriva da params.get('md')
+      return md ? md : '# Nessun contenuto';
     }
     window.addEventListener('DOMContentLoaded', () => {
       const markdown = getMarkdown();
