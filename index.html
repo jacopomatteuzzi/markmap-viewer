@@ -8,13 +8,32 @@
   <style>
     html, body { height: 100%; margin: 0; }
     #map { width: 100vw; height: 100vh; }
+    #export-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      padding: 10px 18px;
+      background: #2196f3;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+    #export-btn:hover {
+      background: #1769aa;
+    }
   </style>
 </head>
 <body>
+  <button id="export-btn">Esporta PNG</button>
   <div id="map"></div>
   <script src="https://cdn.jsdelivr.net/npm/mind-elixir/dist/mind-elixir.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html-to-image@1.11.11/dist/html-to-image.min.js"></script>
   <script>
-    // Funzione avanzata: supporta titoli di qualsiasi livello e liste annidate
+    // Conversione avanzata markdown -> MindElixir
     function markdownToMindElixir(markdown) {
       const lines = markdown.split('\n').map(l => l.replace(/\s+$/, ''));
       const rootStack = [];
@@ -35,7 +54,6 @@
             rootStack.length = 0;
             rootStack.push(node);
           } else {
-            // Trova il genitore corretto
             rootStack.length = level - 1;
             const parent = rootStack[rootStack.length - 1];
             parent.children.push(node);
@@ -48,7 +66,6 @@
           const indent = match[1].length;
           const level = Math.floor(indent / 2) + lastLevel;
           const node = createNode(match[2]);
-          // Trova il genitore corretto per la lista
           rootStack.length = level;
           const parent = rootStack[rootStack.length - 1];
           parent.children.push(node);
@@ -78,7 +95,7 @@
 
     const mind = new MindElixir({
       el: '#map',
-      direction: MindElixir.LEFT,
+      layout: MindElixir.RADIAL, // RADIALE di default!
       data: data,
       draggable: true,
       contextMenu: true,
@@ -88,6 +105,25 @@
       locale: 'it',
     });
     mind.init();
+
+    // Esporta PNG usando html-to-image
+    document.getElementById('export-btn').addEventListener('click', function() {
+      const mapEl = document.querySelector('#map .map-canvas');
+      if (!mapEl) {
+        alert('Mappa non trovata!');
+        return;
+      }
+      htmlToImage.toPng(mapEl)
+        .then(function (dataUrl) {
+          const link = document.createElement('a');
+          link.download = 'mappa-mentale.png';
+          link.href = dataUrl;
+          link.click();
+        })
+        .catch(function (error) {
+          alert('Errore durante l\'esportazione: ' + error);
+        });
+    });
   </script>
 </body>
 </html>
