@@ -2,17 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Custom Markmap Viewer by Samo</title>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com;">
+  <title>MindElixir Viewer</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mind-elixir/dist/mind-elixir.min.css">
   <style>
     html, body { height: 100%; margin: 0; }
-    #mindmap { width: 100vw; height: 100vh; }
+    #map { width: 100vw; height: 100vh; }
   </style>
 </head>
 <body>
-  <svg id="mindmap"></svg>
-  <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.15.3/dist/browser/view.min.js" onload="renderMindmap()"></script>
+  <div id="map"></div>
+  <script src="https://cdn.jsdelivr.net/npm/mind-elixir/dist/mind-elixir.min.js"></script>
   <script>
+    // Funzione di conversione
+    function markdownToMindElixir(markdown) {
+      const lines = markdown.split('\n').map(l => l.trim()).filter(Boolean);
+      function createNode(topic) {
+        return { id: Math.random().toString(36).substr(2, 9), topic, children: [] };
+      }
+      let root = null;
+      let stack = [];
+      lines.forEach(line => {
+        let match;
+        if ((match = line.match(/^# (.+)/))) {
+          root = createNode(match[1]);
+          stack = [root];
+        } else if ((match = line.match(/^## (.+)/))) {
+          const node = createNode(match[1]);
+          if (stack.length > 0) {
+            stack[0].children.push(node);
+            stack = [stack[0], node];
+          }
+        } else if ((match = line.match(/^### (.+)/))) {
+          const node = createNode(match[1]);
+          if (stack.length > 1) {
+            stack[1].children.push(node);
+            stack = [stack[0], stack[1], node];
+          }
+        } else if ((match = line.match(/^- (.+)/))) {
+          const node = createNode(match[1]);
+          if (stack.length > 0) {
+            stack[stack.length - 1].children.push(node);
+          }
+        }
+      });
+      return { nodeData: root };
+    }
+
+    // Esempio: prendi il markdown dalla query string (?md=...)
     function getMarkdown() {
       const params = new URLSearchParams(window.location.search);
       let md = params.get('md');
@@ -23,15 +60,24 @@
           md = '';
         }
       }
-      return md ? md : '# Nessun contenuto';
+      return md ? md : '# Mappa Mentale\n\n## Esempio\n- Primo punto\n- Secondo punto';
     }
-    function renderMindmap() {
-      const markdown = getMarkdown();
-      const { Markmap, Transformer } = window.markmap;
-      const transformer = new Transformer();
-      const { root } = transformer.transform(markdown);
-      Markmap.create('#mindmap', null, root);
-    }
+
+    const markdown = getMarkdown();
+    const data = markdownToMindElixir(markdown);
+
+    const mind = new MindElixir({
+      el: '#map',
+      direction: MindElixir.LEFT,
+      data: data,
+      draggable: true,
+      contextMenu: true,
+      toolBar: true,
+      nodeMenu: true,
+      keypress: true,
+      locale: 'it',
+    });
+    mind.init();
   </script>
 </body>
 </html>
