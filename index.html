@@ -2,17 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Custom Markmap Viewer</title>
+  <title>Custom Markmap Viewer by Samo</title>
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com;">
   <style>
     html, body { height: 100%; margin: 0; }
     #mindmap { width: 100vw; height: 100vh; }
   </style>
-  <!-- Markmap Standalone -->
-  <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.15.3/dist/browser/view.min.js"></script>
 </head>
 <body>
   <svg id="mindmap"></svg>
+  <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.15.3/dist/browser/view.min.js" onload="renderMindmap()"></script>
   <script>
     function getMarkdown() {
       const params = new URLSearchParams(window.location.search);
@@ -26,13 +25,13 @@
       }
       return md ? md : '# Nessun contenuto';
     }
-    window.addEventListener('DOMContentLoaded', () => {
+    function renderMindmap() {
       const markdown = getMarkdown();
       const { Markmap, Transformer } = window.markmap;
       const transformer = new Transformer();
       const { root } = transformer.transform(markdown);
       Markmap.create('#mindmap', null, root);
-    });
+    }
   </script>
 </body>
 </html>
