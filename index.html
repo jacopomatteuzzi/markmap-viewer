@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Custom Markmap Viewer</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net;">
+  <style>
+    html, body { height: 100%; margin: 0; }
+    #mindmap { width: 100vw; height: 100vh; }
+  </style>
+  <!-- Markmap CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader"></script>
+</head>
+<body>
+  <svg id="mindmap"></svg>
+  <script>
+    // Get markdown from query string (?md=...) or hash (#md=...)
+    function getMarkdown() {
+      const params = new URLSearchParams(window.location.search);
+      let md = params.get('md');
+      if (!md && window.location.hash.startsWith('#md=')) {
+        md = decodeURIComponent(window.location.hash.slice(4));
+      }
+      return md ? decodeURIComponent(md) : '# Nessun contenuto';
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+      const markdown = getMarkdown();
+      window.markmap.autoLoader.render('#mindmap', markdown);
+    });
+  </script>
+</body>
+</html>
