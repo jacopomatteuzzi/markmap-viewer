@@ -8,13 +8,12 @@
     html, body { height: 100%; margin: 0; }
     #mindmap { width: 100vw; height: 100vh; }
   </style>
-  <!-- Markmap CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/markmap-autoloader"></script>
+  <!-- Markmap Standalone -->
+  <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.15.3/dist/browser/view.min.js"></script>
 </head>
 <body>
   <svg id="mindmap"></svg>
   <script>
-    // Funzione robusta per ottenere il markdown dalla query string o hash
     function getMarkdown() {
       const params = new URLSearchParams(window.location.search);
       let md = params.get('md');
@@ -25,12 +24,14 @@
           md = '';
         }
       }
-      // NON decodificare di nuovo se arriva da params.get('md')
       return md ? md : '# Nessun contenuto';
     }
     window.addEventListener('DOMContentLoaded', () => {
       const markdown = getMarkdown();
-      window.markmap.autoLoader.render('#mindmap', markdown);
+      const { Markmap, Transformer } = window.markmap;
+      const transformer = new Transformer();
+      const { root } = transformer.transform(markdown);
+      Markmap.create('#mindmap', null, root);
     });
   </script>
 </body>
