@@ -14,42 +14,52 @@
   <div id="map"></div>
   <script src="https://cdn.jsdelivr.net/npm/mind-elixir/dist/mind-elixir.min.js"></script>
   <script>
-    // Funzione di conversione
+    // Funzione avanzata: supporta titoli di qualsiasi livello e liste annidate
     function markdownToMindElixir(markdown) {
-      const lines = markdown.split('\n').map(l => l.trim()).filter(Boolean);
+      const lines = markdown.split('\n').map(l => l.replace(/\s+$/, ''));
+      const rootStack = [];
+      let lastLevel = 0;
+
       function createNode(topic) {
         return { id: Math.random().toString(36).substr(2, 9), topic, children: [] };
       }
-      let root = null;
-      let stack = [];
+
       lines.forEach(line => {
+        if (!line.trim()) return;
         let match;
-        if ((match = line.match(/^# (.+)/))) {
-          root = createNode(match[1]);
-          stack = [root];
-        } else if ((match = line.match(/^## (.+)/))) {
-          const node = createNode(match[1]);
-          if (stack.length > 0) {
-            stack[0].children.push(node);
-            stack = [stack[0], node];
+        // Titoli (#, ##, ###, ####, ecc.)
+        if ((match = line.match(/^(#+) (.+)/))) {
+          const level = match[1].length;
+          const node = createNode(match[2]);
+          if (level === 1) {
+            rootStack.length = 0;
+            rootStack.push(node);
+          } else {
+            // Trova il genitore corretto
+            rootStack.length = level - 1;
+            const parent = rootStack[rootStack.length - 1];
+            parent.children.push(node);
+            rootStack.push(node);
           }
-        } else if ((match = line.match(/^### (.+)/))) {
-          const node = createNode(match[1]);
-          if (stack.length > 1) {
-            stack[1].children.push(node);
-            stack = [stack[0], stack[1], node];
-          }
-        } else if ((match = line.match(/^- (.+)/))) {
-          const node = createNode(match[1]);
-          if (stack.length > 0) {
-            stack[stack.length - 1].children.push(node);
-          }
+          lastLevel = level;
+        }
+        // Liste annidate (spazi + - item)
+        else if ((match = line.match(/^(\s*)- (.+)/))) {
+          const indent = match[1].length;
+          const level = Math.floor(indent / 2) + lastLevel;
+          const node = createNode(match[2]);
+          // Trova il genitore corretto per la lista
+          rootStack.length = level;
+          const parent = rootStack[rootStack.length - 1];
+          parent.children.push(node);
+          rootStack.push(node);
         }
       });
-      return { nodeData: root };
+
+      return { nodeData: rootStack[0] || createNode('Mappa Mentale vuota') };
     }
 
-    // Esempio: prendi il markdown dalla query string (?md=...)
+    // Prendi il markdown dalla query string (?md=...)
     function getMarkdown() {
       const params = new URLSearchParams(window.location.search);
       let md = params.get('md');
